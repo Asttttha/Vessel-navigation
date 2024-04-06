@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -9,8 +9,10 @@ import frameIcon from './assets/Frame 334.png';
 const Map = () => {
 
     const [currentPosition, setCurrentPosition] = useState([22.1696, 91.4996]);
-    const startPoint = [22.1696, 91.4996];
-    const endPoint = [22.2637, 91.7159];
+    // const startPoint = [22.1696, 91.4996];
+    // const endPoint = [22.2637, 91.7159];
+    const startPoint = useMemo(() => [22.1696, 91.4996], []);
+    const endPoint = useMemo(() => [22.2637, 91.7159], []);
     const speed = 20; //kmph
     const refreshRate = 0.5; //in seconds (2FPS)
 
@@ -34,7 +36,7 @@ const Map = () => {
         }, refreshRate * 1000);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [startPoint, endPoint]);
 
 
     const vesselPopupContent = (
