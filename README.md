@@ -33,13 +33,13 @@ https://vessel-navigation.netlify.app/
 1. Clone the repository to your local machine:
 
    ```bash
-   git clone https://github.com/your-username/vessel-tracking-app.git
+   git clone https://github.com/Asttttha/Vessel-navigation.git
    ```
 
 2. Navigate to the project directory:
 
    ```bash
-   cd vessel-tracking-app
+   cd Vessel-navigation
    ```
 
 3. Install dependencies using npm:
