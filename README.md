@@ -17,6 +17,10 @@ Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
 This is a simple web application that tracks the movement of a vessel from a starting point to an ending point on a map. It utilizes React with Leaflet for mapping functionality.
 
+## Deployed link
+
+https://vessel-navigation.netlify.app/
+
 ## Features
 
 - Real-time tracking of vessel position on the map
