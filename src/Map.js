@@ -6,111 +6,99 @@ import startIcon from './assets/location_svgrepo.com (1).png';
 import endIcon from './assets/location_svgrepo.com (2).png';
 import frameIcon from './assets/Frame 334.png';
 
-const Map = ({ startingCoordinates, endingCoordinates, currentPosition }) => {
+const Map = () => {
 
-    //icons
-    const startIconUrl = startIcon;
-    const endIconUrl = endIcon;
-    const frameIconUrl = frameIcon;
-
-    //icon size
-    const startIconSize = [24, 24];
-    const endIconSize = [24, 24];
-    const frameIconSize = [10, 60];
-
-    //icon amchor
-    const startIconAnchor = [12, 12];
-    const endIconAnchor = [12, 12];
-    const frameIconAnchor = [2, 24];
-
-    //properties
-    const startIconOptions = {
-        iconUrl: startIconUrl,
-        iconSize: startIconSize,
-        iconAnchor: startIconAnchor
-    };
-
-    const endIconOptions = {
-        iconUrl: endIconUrl,
-        iconSize: endIconSize,
-        iconAnchor: endIconAnchor
-    };
-
-    const frameIconOptions = {
-        iconUrl: frameIconUrl,
-        iconSize: frameIconSize,
-        iconAnchor: frameIconAnchor
-    };
-
-    const customStartIcon = L.icon(startIconOptions);
-    const customEndIcon = L.icon(endIconOptions);
-    const customFrameIcon = L.icon(frameIconOptions);
-
-    //vessel position and updates
-    const [vesselPosition, setVesselPosition] = useState(startingCoordinates);
+    const [currentPosition, setCurrentPosition] = useState([22.1696, 91.4996]);
+    const startPoint = [22.1696, 91.4996];
+    const endPoint = [22.2637, 91.7159];
+    const speed = 20; //kmph
+    const refreshRate = 0.5; //in seconds (2FPS)
 
     useEffect(() => {
-        const totalDistance = calculateDistance(startingCoordinates, endingCoordinates);
-        const totalTime = (totalDistance / 20) * 3600; // Assuming speed of 20 m/s
-        const intervals = Math.ceil(totalTime / 500); // 500 ms intervals for 2FPS
+        const distance = L.latLng(startPoint).distanceTo(endPoint); // in meters
+        const time = (distance / 1000) / speed; // in hours
+        const numSteps = Math.ceil(time / refreshRate); // total steps needed
+        const stepLat = (endPoint[0] - startPoint[0]) / numSteps;
+        const stepLng = (endPoint[1] - startPoint[1]) / numSteps;
 
-        let currentInterval = 0;
-        const updatePosition = setInterval(() => {
-            console.log('Interval triggered');
-            if (currentInterval >= intervals) {
-                clearInterval(updatePosition);
+        let step = 0;
+        const interval = setInterval(() => {
+            if (step <= numSteps) {
+                const newLat = startPoint[0] + stepLat * step;
+                const newLng = startPoint[1] + stepLng * step;
+                setCurrentPosition([newLat, newLng]);
+                step++;
             } else {
-                const fraction = (currentInterval + 1) / intervals;
-                const lat = startingCoordinates[0] + fraction * (endingCoordinates[0] - startingCoordinates[0]);
-                const lng = startingCoordinates[1] + fraction * (endingCoordinates[1] - startingCoordinates[1]);
-
-                setVesselPosition([lat, lng]);
-                console.log('Vessel position:', [lat, lng]);
-                currentInterval++;
-
+                clearInterval(interval);
             }
-        }, 500); // Interval duration set to 500ms
+        }, refreshRate * 1000);
 
-        return () => clearInterval(updatePosition);
-    }, [startingCoordinates, endingCoordinates]);
+        return () => clearInterval(interval);
+    }, []);
+
+
+    const vesselPopupContent = (
+        <div>
+            <h4>Vessel position</h4>
+            <p>Latitude: {currentPosition[0]}</p>
+            <p>Longitude: {currentPosition[1]}</p>
+        </div>
+    );
+
+
+
+    // const frameIconMarker = L.icon({
+    //     // iconUrl: frameIcon,
+    //     iconSize: [10, 60],
+    //     iconAnchor: [10, 50],
+    //     popupAnchor: [0, -20],
+    //     className: 'vessel-icon',
+    // });
+
+    const frameIconMarker = L.divIcon({
+        iconAnchor: [11, 50],
+        popupAnchor: [0, -70],
+        className: 'vessel-icon',
+        html: `<img style="transform: rotate(60deg);" height="50" width="50" src="${frameIcon}">`
+    });
+    
+
+    const startIconMarker = L.icon({
+        iconUrl: startIcon,
+        iconSize: [30, 30],
+        iconAnchor: [20, 40],
+        popupAnchor: [0, -40],
+    });
+
+    const endIconMarker = L.icon({
+        iconUrl: endIcon,
+        iconSize: [30, 30],
+        iconAnchor: [10, 45],
+        popupAnchor: [0, -40],
+    });
+
 
     return (
+
         <MapContainer center={currentPosition} zoom={10} scrollWheelZoom={false} className='map-container'>
             <TileLayer
                 attribution='&copy;'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <Marker position={vesselPosition} icon={customFrameIcon}>
+            <Marker position={currentPosition} icon={frameIconMarker}>
                 <Popup>
-                    Vessel Position <br /> Lat: {vesselPosition[0]}, Long: {vesselPosition[1]}
+                    {vesselPopupContent}
                 </Popup>
             </Marker>
-            <Marker position={startingCoordinates} icon={customStartIcon}>
+            <Marker position={startPoint} icon={startIconMarker}>
                 <Popup>Starting Point</Popup>
             </Marker>
-            <Marker position={endingCoordinates} icon={customEndIcon}>
-                <Popup>End Point</Popup>
+            <Marker position={endPoint} icon={endIconMarker}>
+                <Popup>Ending Point</Popup>
             </Marker>
         </MapContainer>
-    );
+    )
 };
 
 export default Map;
 
-function calculateDistance(coord1, coord2) {
-    const [lat1, lon1] = coord1;
-    const [lat2, lon2] = coord2;
-    const R = 6371e3; // metres
-    const φ1 = (lat1 * Math.PI) / 180; // φ, λ in radians
-    const φ2 = (lat2 * Math.PI) / 180;
-    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-
-    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-        Math.cos(φ1) * Math.cos(φ2) *
-        Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    const d = R * c; // in metres
-    return d;
-}
